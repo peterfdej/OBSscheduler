@@ -12,3 +12,5 @@ obssceduletimes.xml is used for the times (date and time, format DDMMYYYYHHmmss)
 The label processed need to be 0, until scene is switched, it will set to 1.
 
 Every hour it wil create JSON files containing scene and transition information of your OBS  server.
+
+There is also a mySQL version, which uses a mySQL database.
