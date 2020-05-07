@@ -2,26 +2,47 @@
 
 import sys
 import time
-import xml.etree.ElementTree as ET
 import socket
 import websocket
 import hashlib
 import base64
 import json
+import mysql.connector
+from mysql.connector import Error
 try:
     import thread
 except ImportError:
     import _thread as thread
 
-xmlfile = 'obssceduletimes.xml'
-tree = ET.parse('obshost.xml')  
-root = tree.getroot()
-host = root[0].text
-port = root[1].text
-password = root[2].text
+
+
+mysqlconfig = {
+  'user': 'user',
+  'password': 'pass',
+  'host': '127.0.0.1',
+  'port': '3307',
+  'database': 'OBSdb',
+  'raise_on_warnings': True
+}
+
+try:
+	connection = mysql.connector.connect(**mysqlconfig)
+	if connection.is_connected():
+		db_Info = connection.get_server_info()
+		print("Connected to MySQL Server version ", db_Info)
+		mycursor = connection.cursor(dictionary=True)
+		mycursor.execute("SELECT * FROM host")
+		records = mycursor.fetchall()
+		for row in records:
+			host = row["hostname"]
+			port = row["port"]
+			password = row["pass"]
+
+except Error as e:
+	print("Error while connecting to MySQL", e)
 
 StudioMode = False
-exporttime = '3500' # every hour at mmss
+exporttime = '1500' # every hour at mmss
 GetAuthRequired = {"request-type" : "GetAuthRequired" ,"message-id" : "1"};
 GetStudioModeStatus = {"request-type" : "GetStudioModeStatus" , "message-id" : "GetStudioModeStatus"}
 GetSceneList = {"request-type" : "GetSceneList" , "message-id" : "getSceneList"}
@@ -44,11 +65,25 @@ while True:
 					global StudioMode
 					StudioMode = data["studio-mode"]
 				elif (data["message-id"] == "getSceneList"):
-					with open('scenelist.txt', 'w') as outfile:
-						json.dump(data, outfile) 
+					mycursor = connection.cursor()
+					mycursor.execute("TRUNCATE TABLE scenenames")
+					connection.commit()
+					for i in data['scenes']:
+						scene = i['name']
+						mycursor = connection.cursor()
+						qry = "INSERT INTO scenenames(scene) VALUES('" + scene + "')"
+						mycursor.execute(qry)
+						connection.commit()
 				elif (data["message-id"] == "GetTransitionList"):
-					with open('transitionlist.txt', 'w') as outfile:
-						json.dump(data, outfile)
+					mycursor = connection.cursor()
+					mycursor.execute("TRUNCATE TABLE transitionnames")
+					connection.commit()
+					for i in data['transitions']:
+						trans_type = i['name']
+						mycursor = connection.cursor()
+						qry = "INSERT INTO transitionnames(transition) VALUES('" + trans_type + "')"
+						mycursor.execute(qry)
+						connection.commit()
 				elif (data["authRequired"]):
 					print("Authentication required")
 					secret = base64.b64encode(hashlib.sha256((password + data['salt']).encode('utf-8')).digest())
@@ -77,26 +112,25 @@ while True:
 				if ws.sock:
 					ws.send(json.dumps(GetStudioModeStatus))
 					while True:
-						tree = ET.parse(xmlfile)  
-						root = tree.getroot()
 						currentdtime = time.strftime("%Y%m%d%H%M%S",time.localtime())
+						mycursor = connection.cursor(dictionary=True)
+						mycursor.execute("SELECT * FROM scedules Where processed = 0")
+						records = mycursor.fetchall()
 						print(time.strftime("%H:%M:%S",time.localtime()))
-						for elem in root:
-							if elem[2].text == '0': #task not processed.
-								dtime = elem.attrib['dtime']
-								if currentdtime == dtime:
-									print(dtime)
-									scene = elem[0].text
-									trans_type = elem[1].text
-									print(scene)
-									print(trans_type)
-									elem[2].text = '1'
-									message={"request-type" : "SetCurrentTransition" , "message-id" : "SetCurrentTransition" ,"transition-name":trans_type};
-									ws.send(json.dumps(message))
-									message = {"request-type" : "SetCurrentScene" , "message-id" : "SetCurrentScene" , "scene-name" : scene};
-									ws.send(json.dumps(message))
-									tree.write(xmlfile)
-									time.sleep(1) #prevent read error
+						for row in records:
+							dtime = row["dtime"]
+							scene = row["scene"]
+							trans_type = row["transition"]
+							if currentdtime == dtime:
+								message={"request-type" : "SetCurrentTransition" , "message-id" : "SetCurrentTransition" ,"transition-name":trans_type};
+								ws.send(json.dumps(message))
+								message = {"request-type" : "SetCurrentScene" , "message-id" : "SetCurrentScene" , "scene-name" : scene};
+								ws.send(json.dumps(message))
+								mycursor = connection.cursor()
+								qry = "UPDATE scedules SET processed = 1 WHERE dtime = '" + dtime + "'"
+								mycursor.execute(qry)
+								connection.commit()
+								print("Transition to: " + scene + " at " + time.strftime("%H:%M:%S",time.localtime()))
 						time.sleep(0.5) #no need 100's loops a second
 						# export scene names and transition names.
 						timenow = time.strftime("%M%S",time.localtime())

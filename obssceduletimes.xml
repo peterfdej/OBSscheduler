@@ -1,10 +1,10 @@
 <data>
-	<task dtime="05052020113625">
+	<task dtime="20200505113625">
 		<scene>Cam1</scene>
 		<trans_type>Fade</trans_type>
 		<processed>1</processed>
 	</task>
-	<task dtime="05052020113640">
+	<task dtime="20200505113640">
 		<scene>Cam2</scene>
 		<trans_type>Cut</trans_type>
 		<processed>0</processed>
