@@ -15,7 +15,7 @@ except ImportError:
     import _thread as thread
 
 
-
+#MariaDB settings. Port = 3306 or 3307
 mysqlconfig = {
   'user': 'user',
   'password': 'pass',
@@ -50,7 +50,8 @@ except Error as e:
 
 
 StudioMode = False
-exporttime = 4500  # every hour at mmss
+exporttime = [0,1000,2000,3000,4000,5000]  # every hour at mmss. 100 = 1 minute after each hour, 1500 = 15 minutes after each hour.
+#[0,1000,2000,3000,4000,5000] = export every 10 minutes
 GetAuthRequired = {"request-type" : "GetAuthRequired" ,"message-id" : "1"};
 GetStudioModeStatus = {"request-type" : "GetStudioModeStatus" , "message-id" : "GetStudioModeStatus"}
 GetSceneList = {"request-type" : "GetSceneList" , "message-id" : "getSceneList"}
@@ -79,6 +80,9 @@ while True:
 					mycursor = connection.cursor()
 					mycursor.execute("TRUNCATE TABLE scenenames")
 					connection.commit()
+					mycursor = connection.cursor()
+					mycursor.execute("TRUNCATE TABLE sourcenames")
+					connection.commit()
 					for i in data['scenes']:
 						scene = i['name']
 						if not connection.is_connected():
@@ -87,22 +91,14 @@ while True:
 						qry = "INSERT INTO scenenames(scene) VALUES('" + scene + "')"
 						mycursor.execute(qry)
 						connection.commit()
-				elif (data["message-id"] == "GetSourcesList"):
-					if not connection.is_connected():
-							connection.reconnect(attempts=5, delay=0)
-					mycursor = connection.cursor()
-					mycursor.execute("TRUNCATE TABLE sources")
-					connection.commit()
-					for i in data['sources']:
-						sourcename = i['name']
-						sourcetype = i['type']
-						sourcetypeId = i['typeId']
-						mycursor = connection.cursor()
-						qry = "INSERT INTO sources(name, type, typeId) VALUES('" + sourcename + "' , '" + sourcetype +"' , '" + sourcetypeId + "')"
-						if not connection.is_connected():
-							connection.reconnect(attempts=5, delay=0)
-						mycursor.execute(qry)
-						connection.commit()
+						for j in i['sources']:
+							sourcename = j['name']
+							mycursor = connection.cursor()
+							qry = "INSERT INTO sourcenames(scene,source) VALUES('" + scene + "' , '" + sourcename + "')"
+							if not connection.is_connected():
+								connection.reconnect(attempts=5, delay=0)
+							mycursor.execute(qry)
+							connection.commit()
 				elif (data["message-id"] == "GetTransitionList"):
 					if not connection.is_connected():
 							connection.reconnect(attempts=5, delay=0)
@@ -159,18 +155,18 @@ while True:
 								dtime = row["dtime"]
 								scene = row["scene"]
 								trans_type = row["transition"]
-								source1 = row["source1"] #source in this scene to switch off
-								source2 = row["source2"] #source in this scene to switch on
-								if currentdtime == dtime:
+								sourceoff = row["sourceoff"] #source in this scene to switch off
+								sourceon = row["sourceon"] #source in this scene to switch on
+								if currentdtime == dtime or float(currentdtime) - 1 == float(dtime): #when missing timestamp 1 sec retry
 									message={"request-type" : "SetCurrentTransition" , "message-id" : "SetCurrentTransition" ,"transition-name":trans_type};
 									ws.send(json.dumps(message))
 									message = {"request-type" : "SetCurrentScene" , "message-id" : "SetCurrentScene" , "scene-name" : scene};
 									ws.send(json.dumps(message))
-									if len(source1) > 0:
-										message={"request-type" : "SetSceneItemProperties" , "message-id" : "SetSceneItemProperties" , "scene-name" : scene , "item" : source1 , "visible": False };
+									if len(sourceoff) > 0:
+										message={"request-type" : "SetSceneItemProperties" , "message-id" : "SetSceneItemProperties" , "scene-name" : scene , "item" : sourceoff , "visible": False };
 										ws.send(json.dumps(message))
-									if len(source2) > 0:
-										message={"request-type" : "SetSceneItemProperties" , "message-id" : "SetSceneItemProperties" , "scene-name" : scene , "item" : source2 , "visible": True };
+									if len(sourceon) > 0:
+										message={"request-type" : "SetSceneItemProperties" , "message-id" : "SetSceneItemProperties" , "scene-name" : scene , "item" : sourceon , "visible": True };
 										ws.send(json.dumps(message))
 									if not connectionthread.is_connected():
 										connectionthread.reconnect(attempts=5, delay=0)
@@ -183,15 +179,15 @@ while True:
 							time.sleep(0.25) #no need 100's loops a second
 						except Exception:
 							print("connectionthread error")
-						timenow = float(time.strftime("%M%S",time.localtime()))
-						if timenow == exporttime:
+						timenow = int(time.strftime("%M%S",time.localtime()))
+						if timenow in exporttime:
+							print("export scenes")
 							ws.send(json.dumps(GetSceneList))
+							Updatescenes = False
 							time.sleep(0.25)
-						if timenow == exporttime + 10:
+						if timenow - 10 in exporttime:
+							print("export transitions")
 							ws.send(json.dumps(GetTransitionList))
-							time.sleep(0.25)
-						if timenow == exporttime + 20:
-							ws.send(json.dumps(GetSourcesList))
 							time.sleep(0.25)
 			thread.start_new_thread(run, ())
 

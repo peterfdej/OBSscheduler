@@ -2,6 +2,7 @@ OBSsceduler can be used as a sceduled scene switcher for OBS.
 It uses the OBS-websocket plugin by Palakis.
 
 You need to run obssceduler.py in python.
+Python uses websocket-client (pip install websocket-client)
 
 Edit obshost.xml for connect to the OBS server.
 Host is the ip address of the OBS server.
@@ -13,4 +14,5 @@ The label processed need to be 0, until scene is switched, it will set to 1.
 
 Every hour it wil create JSON files containing scene and transition information of your OBS  server.
 
-There is also a mySQL version, which uses a mySQL database.
+For the mysql (MariaDB) version python uses mysql-connection-python (pip install mysql-connection-python).
+
