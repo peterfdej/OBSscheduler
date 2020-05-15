@@ -3,6 +3,7 @@
 import sys
 import time
 from datetime import datetime
+from datetime import timedelta 
 import socket
 import websocket
 import hashlib
@@ -164,6 +165,7 @@ while True:
 								trans_type = row["transition"]
 								sourceoff = row["sourceoff"] #source in this scene to switch off
 								sourceon = row["sourceon"] #source in this scene to switch on
+								repeattime = row["repeattime"]
 								if currentdtime == dtime: 
 									message={"request-type" : "SetCurrentTransition" , "message-id" : "SetCurrentTransition" ,"transition-name":trans_type};
 									ws.send(json.dumps(message))
@@ -178,8 +180,13 @@ while True:
 									if not connectionthread.is_connected():
 										connectionthread.reconnect(attempts=5, delay=0)
 									mycursor = connectionthread.cursor()
-									print(id)
-									qry = "UPDATE scedules SET processed = 1 WHERE id = " + str(id) + ";"
+									if repeattime > 0:
+										newdtime = datetime_str + timedelta(hours=repeattime)
+										new_time_object = datetime.time(newdtime)
+										new_date_object = datetime.date(newdtime)
+										qry = "UPDATE scedules SET swtime = '" + new_time_object.strftime("%H:%M:%S") + "', swdate ='" + new_date_object.strftime("%Y-%m-%d") + "' WHERE id = " + str(id) + ";"
+									else:
+										qry = "UPDATE scedules SET processed = 1 WHERE id = " + str(id) + ";"
 									mycursor.execute(qry)
 									connectionthread.commit()
 									print("Transition to: " + scene + " at " + time.strftime("%H:%M:%S",time.localtime()))

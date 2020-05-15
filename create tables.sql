@@ -15,9 +15,10 @@ CREATE TABLE `scedules` (
  `sourceoff` varchar(255) NOT NULL,
  `sourceon` varchar(255) NOT NULL,
  `duration` time NOT NULL,
+ `repeattime` int(11) NOT NULL,
  `processed` tinyint(1) NOT NULL DEFAULT 0,
  UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8
 CREATE TABLE `scenenames` (
  `scene` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
