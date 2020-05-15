@@ -19,7 +19,7 @@ $output = '
 		<th>Bron uit</th>
 		<th>Bron aan</th>
 		<th>Looptijd</th>
-		<th>Verwerkt</th>
+		<th>Herhaal</th>
 		<th>Edit</th>
 		<th>Delete</th>
 	</tr>
@@ -37,7 +37,7 @@ if($total_row > 0)
 			<td width="20%">'.$row["sourceoff"].'</td>
 			<td width="20%">'.$row["sourceon"].'</td>
 			<td width="5%">'.$row["duration"].'</td>
-			<td width="5%">'.$row["processed"].'</td>
+			<td width="5%">'.$row["repeattime"].'</td>
 			<td width="5%">
 				<button type="button" name="edit" class="btn btn-primary btn-xs edit" id="'.$row["id"].'">Edit</button>
 			</td>

@@ -125,11 +125,16 @@
 						?>
 					</select>
 					<span id="error_sourceon" class="text-danger"></span>
+				</div>
 				<div class="form-group">
 					<label>Geef looptijd</label>
 					<input type="time" name="duration" id="duration" step="1" value="00:00:00" class="form-control" />
 					<span id="error_duration" class="text-danger"></span>
 				</div>
+				<div class="form-group">
+					<label>Geef herhaaltijd in uren</label>
+					<input type="text" name="repeattime" id="repeattime" class="form-control" />
+					<span id="error_repeattime" class="text-danger"></span>
 				</div>
 				<div class="form-group">
 					<input type="hidden" name="action" id="action" value="insert" />
@@ -259,7 +264,7 @@ $(document).ready(function(){
 				$('#sourceoff').val(data.sourceoff);
 				$('#sourceon').val(data.sourceon);
 				$('#duration').val(data.duration);
-				$('#processed').val(data.processed);
+				$('#repeattime').val(data.repeattime);
 				$('#user_dialog').attr('title', 'Edit Data');
 				$('#action').val('update');
 				$('#hidden_id').val(id);

@@ -9,7 +9,7 @@ if(isset($_POST["action"]))
 	if($_POST["action"] == "insert")
 	{
 		$query = "
-	INSERT INTO scedules (swdate, swtime, scene, transition, sourceoff, sourceon, duration, processed) VALUES ('".$_POST["swdate"]."','".$_POST["swtime"]."','".$_POST["scene"]."','".$_POST["transition"]."','".$_POST["sourceoff"]."','".$_POST["sourceon"]."','".$_POST["duration"]."','0')
+	INSERT INTO scedules (swdate, swtime, scene, transition, sourceoff, sourceon, duration, repeattime, processed) VALUES ('".$_POST["swdate"]."','".$_POST["swtime"]."','".$_POST["scene"]."','".$_POST["transition"]."','".$_POST["sourceoff"]."','".$_POST["sourceon"]."','".$_POST["duration"]."','".$_POST["repeattime"]."','0')
 		";
 		$statement = $connect->prepare($query);
 		$statement->execute();
@@ -32,7 +32,7 @@ if(isset($_POST["action"]))
 			$output['sourceoff'] = $row['sourceoff'];
 			$output['sourceon'] = $row['sourceon'];
 			$output['duration'] = $row['duration'];
-			$output['processed'] = $row['processed'];
+			$output['repeattime'] = $row['repeattime'];
 		}
 		echo json_encode($output);
 	}
@@ -46,7 +46,8 @@ if(isset($_POST["action"]))
 		transition = '".$_POST["transition"]."',
 		sourceoff = '".$_POST["sourceoff"]."',
 		sourceon = '".$_POST["sourceon"]."',
-		duration = '".$_POST["duration"]."'
+		duration = '".$_POST["duration"]."',
+		repeattime = '".$_POST["repeattime"]."'
 		WHERE id = '".$_POST["hidden_id"]."'
 		";
 		$statement = $connect->prepare($query);
