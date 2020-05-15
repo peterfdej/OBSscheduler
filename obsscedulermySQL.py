@@ -2,6 +2,7 @@
 
 import sys
 import time
+from datetime import datetime
 import socket
 import websocket
 import hashlib
@@ -20,7 +21,7 @@ mysqlconfig = {
   'user': 'user',
   'password': 'pass',
   'host': '127.0.0.1',
-  'port': '3307',
+  'port': '3306',
   'database': 'OBSdb',
   'raise_on_warnings': True
 }
@@ -152,12 +153,18 @@ while True:
 							records = mycursor.fetchall()
 							print(time.strftime("%H:%M:%S",time.localtime()))
 							for row in records:
-								dtime = row["dtime"]
+								id = row["id"]
+								swtime = row["swtime"]
+								swdate = row["swdate"]
+								time_object = datetime.strptime(str(swtime), '%H:%M:%S').time()
+								date_object = datetime.strptime(str(swdate), '%Y-%m-%d').date()
+								datetime_str = datetime.combine(date_object , time_object)
+								dtime = datetime_str.strftime("%Y%m%d%H%M%S")
 								scene = row["scene"]
 								trans_type = row["transition"]
 								sourceoff = row["sourceoff"] #source in this scene to switch off
 								sourceon = row["sourceon"] #source in this scene to switch on
-								if currentdtime == dtime or float(currentdtime) - 1 == float(dtime): #when missing timestamp 1 sec retry
+								if currentdtime == dtime: 
 									message={"request-type" : "SetCurrentTransition" , "message-id" : "SetCurrentTransition" ,"transition-name":trans_type};
 									ws.send(json.dumps(message))
 									message = {"request-type" : "SetCurrentScene" , "message-id" : "SetCurrentScene" , "scene-name" : scene};
@@ -171,7 +178,8 @@ while True:
 									if not connectionthread.is_connected():
 										connectionthread.reconnect(attempts=5, delay=0)
 									mycursor = connectionthread.cursor()
-									qry = "UPDATE scedules SET processed = 1 WHERE dtime = '" + dtime + "'"
+									print(id)
+									qry = "UPDATE scedules SET processed = 1 WHERE id = " + str(id) + ";"
 									mycursor.execute(qry)
 									connectionthread.commit()
 									print("Transition to: " + scene + " at " + time.strftime("%H:%M:%S",time.localtime()))
