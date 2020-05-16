@@ -132,7 +132,7 @@
 					<span id="error_duration" class="text-danger"></span>
 				</div>
 				<div class="form-group">
-					<label>Geef herhaaltijd in uren</label>
+					<label>Geef herhaaltijd in minuten, aantal keren</label>
 					<input type="text" name="repeattime" id="repeattime" class="form-control" />
 					<span id="error_repeattime" class="text-danger"></span>
 				</div>
