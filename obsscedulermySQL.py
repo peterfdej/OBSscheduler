@@ -20,7 +20,7 @@ except ImportError:
 #MariaDB settings. Port = 3306 or 3307
 mysqlconfig = {
   'user': 'user',
-  'password': 'Jpass',
+  'password': 'pass',
   'host': '127.0.0.1',
   'port': '3306',
   'database': 'OBSdb',
@@ -67,6 +67,7 @@ while True:
 			data = json.loads(message)
 			#print (data["message-id"])
 			#print (data)
+			global obsconnected
 			if "error" in data:
 				if (data["error"] == "Authentication Failed."):
 					print("Authentication Failed.")
@@ -124,9 +125,9 @@ while True:
 					auth = base64.b64encode(hashlib.sha256(secret + data['challenge'].encode('utf-8')).digest()).decode('utf-8')
 					auth_payload = {"request-type": "Authenticate", "message-id": "2", "auth": auth}
 					ws.send(json.dumps(auth_payload))
+					obsconnected = True
 				else:
 					print(data)
-					global obsconnected
 					obsconnected = True
 			elif "update-type" in message:
 				if (data["update-type"] == "StudioModeSwitched"):
