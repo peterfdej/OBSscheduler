@@ -20,7 +20,7 @@ except ImportError:
 #MariaDB settings. Port = 3306 or 3307
 mysqlconfig = {
   'user': 'user',
-  'password': 'pass',
+  'password': 'Jpass',
   'host': '127.0.0.1',
   'port': '3306',
   'database': 'OBSdb',
@@ -52,6 +52,7 @@ except Error as e:
 
 
 StudioMode = False
+obsconnected = False
 exporttime = [0,1000,2000,3000,4000,5000]  # every hour at mmss. 100 = 1 minute after each hour, 1500 = 15 minutes after each hour.
 #[0,1000,2000,3000,4000,5000] = export every 10 minutes
 GetAuthRequired = {"request-type" : "GetAuthRequired" ,"message-id" : "1"};
@@ -125,6 +126,8 @@ while True:
 					ws.send(json.dumps(auth_payload))
 				else:
 					print(data)
+					global obsconnected
+					obsconnected = True
 			elif "update-type" in message:
 				if (data["update-type"] == "StudioModeSwitched"):
 					StudioMode = data["new-state"]
@@ -134,7 +137,10 @@ while True:
 			ws.close()
 
 		def on_close(ws):
-			print("Connection error.")
+			print("On Close Connection error.")
+			#stop on_open while loop
+			global obsconnected
+			obsconnected = False
 			ws.keep_running = False
 			time.sleep(30)
 
@@ -144,7 +150,8 @@ while True:
 				time.sleep(2)
 				if ws.sock:
 					ws.send(json.dumps(GetStudioModeStatus))
-					while True:
+					global obsconnected
+					while obsconnected == True:
 						try:
 							currentdtime = time.strftime("%Y%m%d%H%M%S",time.localtime())
 							if not connectionthread.is_connected():
@@ -180,11 +187,28 @@ while True:
 									if not connectionthread.is_connected():
 										connectionthread.reconnect(attempts=5, delay=0)
 									mycursor = connectionthread.cursor()
-									if repeattime > 0:
-										newdtime = datetime_str + timedelta(hours=repeattime)
-										new_time_object = datetime.time(newdtime)
-										new_date_object = datetime.date(newdtime)
-										qry = "UPDATE scedules SET swtime = '" + new_time_object.strftime("%H:%M:%S") + "', swdate ='" + new_date_object.strftime("%Y-%m-%d") + "' WHERE id = " + str(id) + ";"
+									if len(repeattime) > 0:
+										if "," in repeattime:
+											repeattimenew = repeattime.split(',')[0]
+											repeattimenumber = repeattime.split(',')[1]
+											if repeattimenumber == "0": #continuous
+												newdtime = datetime_str + timedelta(minutes=int(repeattimenew))
+												new_time_object = datetime.time(newdtime)
+												new_date_object = datetime.date(newdtime)
+												qry = "UPDATE scedules SET swtime = '" + new_time_object.strftime("%H:%M:%S") + "', swdate ='" + new_date_object.strftime("%Y-%m-%d") + "' WHERE id = " + str(id) + ";"
+											elif repeattimenumber == "1": #last run was done
+												qry = "UPDATE scedules SET processed = 1 WHERE id = " + str(id) + ";"
+											else:
+												newdtime = datetime_str + timedelta(minutes=int(repeattimenew))
+												repeattime = repeattimenew + "," + str(int(repeattimenumber) - 1)
+												new_time_object = datetime.time(newdtime)
+												new_date_object = datetime.date(newdtime)
+												qry = "UPDATE scedules SET swtime = '" + new_time_object.strftime("%H:%M:%S") + "', swdate = '" + new_date_object.strftime("%Y-%m-%d") + "', repeattime = '" + repeattime + "' WHERE id = " + str(id) + ";"
+										else:
+											newdtime = datetime_str + timedelta(minutes=int(repeattime))
+											new_time_object = datetime.time(newdtime)
+											new_date_object = datetime.date(newdtime)
+											qry = "UPDATE scedules SET swtime = '" + new_time_object.strftime("%H:%M:%S") + "', swdate ='" + new_date_object.strftime("%Y-%m-%d") + "' WHERE id = " + str(id) + ";"
 									else:
 										qry = "UPDATE scedules SET processed = 1 WHERE id = " + str(id) + ";"
 									mycursor.execute(qry)
@@ -194,6 +218,8 @@ while True:
 							time.sleep(0.25) #no need 100's loops a second
 						except Exception:
 							print("connectionthread error")
+							connectionthread.close()
+							time.sleep(10)
 						timenow = int(time.strftime("%M%S",time.localtime()))
 						if timenow in exporttime:
 							print("export scenes")
@@ -213,7 +239,7 @@ while True:
 			ws.run_forever()
 
 	except Exception:
-		print("Connection error")
+		print("Exception Connection error")
 		time.sleep(10)
 
 
