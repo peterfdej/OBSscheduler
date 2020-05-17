@@ -152,9 +152,12 @@ while True:
 				if ws.sock:
 					ws.send(json.dumps(GetStudioModeStatus))
 					global obsconnected
+					weekdays = ("ma","di","wo","do","vr","za","zo") #Dutch
 					while obsconnected == True:
 						try:
+							dayrun = False
 							currentdtime = time.strftime("%Y%m%d%H%M%S",time.localtime())
+							timenow = time.strftime("%H:%M:%S",time.localtime())
 							if not connectionthread.is_connected():
 								connectionthread.reconnect(attempts=5, delay=0)
 							mycursor = connectionthread.cursor(dictionary=True)
@@ -174,7 +177,10 @@ while True:
 								sourceoff = row["sourceoff"] #source in this scene to switch off
 								sourceon = row["sourceon"] #source in this scene to switch on
 								repeattime = row["repeattime"]
-								if currentdtime == dtime: 
+								if timenow == datetime_str.strftime("%H:%M:%S"):
+									if weekdays[datetime.today().weekday()] in repeattime:
+										dayrun = True
+								if currentdtime == dtime or dayrun: 
 									message={"request-type" : "SetCurrentTransition" , "message-id" : "SetCurrentTransition" ,"transition-name":trans_type};
 									ws.send(json.dumps(message))
 									message = {"request-type" : "SetCurrentScene" , "message-id" : "SetCurrentScene" , "scene-name" : scene};
@@ -188,7 +194,7 @@ while True:
 									if not connectionthread.is_connected():
 										connectionthread.reconnect(attempts=5, delay=0)
 									mycursor = connectionthread.cursor()
-									if len(repeattime) > 0:
+									if len(repeattime) > 0 and not dayrun:
 										if "," in repeattime:
 											repeattimenew = repeattime.split(',')[0]
 											repeattimenumber = repeattime.split(',')[1]
@@ -212,8 +218,9 @@ while True:
 											qry = "UPDATE scedules SET swtime = '" + new_time_object.strftime("%H:%M:%S") + "', swdate ='" + new_date_object.strftime("%Y-%m-%d") + "' WHERE id = " + str(id) + ";"
 									else:
 										qry = "UPDATE scedules SET processed = 1 WHERE id = " + str(id) + ";"
-									mycursor.execute(qry)
-									connectionthread.commit()
+									if not dayrun:
+										mycursor.execute(qry)
+										connectionthread.commit()
 									print("Transition to: " + scene + " at " + time.strftime("%H:%M:%S",time.localtime()))
 							connectionthread.close()
 							time.sleep(0.25) #no need 100's loops a second
