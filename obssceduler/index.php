@@ -33,17 +33,20 @@
 					foreach($result as $lastrow)
 					{
 						$durationseconds = date("s",strtotime($lastrow["duration"])) + (60*(date("i",strtotime($lastrow["duration"]))))+ (60*60*(date("H",strtotime($lastrow["duration"]))));
-						$swtimenew = date("H:i:s",strtotime($lastrow["swtime"]) + $durationseconds);
+						$olddatetime = date("Y-m-d H:i:s", strtotime($lastrow["swdate"] . $lastrow["swtime"]));
+						$newdatetime = date("d-m-Y H:i:s", strtotime($olddatetime) + $durationseconds);
+						$newdate = date("Y-m-d", strtotime($newdatetime));
+						$newtime = date("H:i:s", strtotime($newdatetime));
 					}
 				?>
 				<div class="form-group">
 					<label>Geef datum</label>
-					<input type="date" name="swdate" id="swdate" value="<?php echo date("Y-m-d"); ?>" class="form-control" />
+					<input type="date" name="swdate" id="swdate" value="<?php echo $newdate; ?>" class="form-control" />
 					<span id="error_swdate" class="text-danger"></span>
 				</div>
 				<div class="form-group">
 					<label>Geef tijd</label>
-					<input type="time" name="swtime" id="swtime" step="1" value="<?php echo $swtimenew; ?>" class="form-control" />
+					<input type="time" name="swtime" id="swtime" step="1" value="<?php echo $newtime; ?>" class="form-control" />
 					<span id="error_swtime" class="text-danger"></span>
 				</div>
 				<div class="form-group">
@@ -132,7 +135,7 @@
 					<span id="error_duration" class="text-danger"></span>
 				</div>
 				<div class="form-group">
-					<label>Geef herhaaltijd in minuten, aantal keren</label>
+					<label>Geef herhaaltijd in minuten, aantal keren of dagen</label>
 					<input type="text" name="repeattime" id="repeattime" class="form-control" />
 					<span id="error_repeattime" class="text-danger"></span>
 				</div>
