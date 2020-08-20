@@ -181,17 +181,33 @@ while True:
 									if weekdays[datetime.today().weekday()] in repeattime:
 										dayrun = True
 								if currentdtime == dtime or dayrun: 
+									if len(sourceon) > 0:
+										#get scene name of source on
+										if not connectionthread.is_connected():
+											connectionthread.reconnect(attempts=5, delay=0)
+										mycursor = connectionthread.cursor(dictionary=True)
+										mycursor.execute("SELECT * FROM sourcenames Where source = '" + sourceon + "';")
+										sourceonscene = mycursor.fetchone()
+										message = {"request-type" : "SetPreviewScene" , "message-id" : "SetPreviewScene" , "scene-name" : sourceonscene["scene"]};
+										ws.send(json.dumps(message))
+										message={"request-type" : "SetSceneItemProperties" , "message-id" : "SetSceneItemProperties" , "scene-name" : sourceonscene["scene"] , "item" : sourceon , "visible": True };
+										ws.send(json.dumps(message))
+									if len(sourceoff) > 0:
+										if not connectionthread.is_connected():
+											connectionthread.reconnect(attempts=5, delay=0)
+										mycursor = connectionthread.cursor(dictionary=True)
+										mycursor.execute("SELECT * FROM sourcenames Where source = '" + sourceoff + "';")
+										sourceoffscene = mycursor.fetchone()
+										message = {"request-type" : "SetPreviewScene" , "message-id" : "SetPreviewScene" , "scene-name" : sourceoffscene["scene"]};
+										ws.send(json.dumps(message))
+										message={"request-type" : "SetSceneItemProperties" , "message-id" : "SetSceneItemProperties" , "scene-name" : sourceoffscene["scene"] , "item" : sourceoff , "visible": False };
+										time.sleep(0.25)
+										ws.send(json.dumps(message))
 									message={"request-type" : "SetCurrentTransition" , "message-id" : "SetCurrentTransition" ,"transition-name":trans_type};
 									ws.send(json.dumps(message))
 									message = {"request-type" : "SetCurrentScene" , "message-id" : "SetCurrentScene" , "scene-name" : scene};
 									ws.send(json.dumps(message))
-									if len(sourceon) > 0:
-										message={"request-type" : "SetSceneItemProperties" , "message-id" : "SetSceneItemProperties" , "scene-name" : scene , "item" : sourceon , "visible": True };
-										ws.send(json.dumps(message))
-									if len(sourceoff) > 0:
-										message={"request-type" : "SetSceneItemProperties" , "message-id" : "SetSceneItemProperties" , "scene-name" : scene , "item" : sourceoff , "visible": False };
-										time.sleep(0.25)
-										ws.send(json.dumps(message))
+									
 									if not connectionthread.is_connected():
 										connectionthread.reconnect(attempts=5, delay=0)
 									mycursor = connectionthread.cursor()
