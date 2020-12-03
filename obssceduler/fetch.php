@@ -4,7 +4,7 @@
 
 include("database_connection.php");
 
-$query = "SELECT * FROM scedules WHERE processed = 0 ORDER BY swdate, swtime";
+$query = "SELECT * FROM schedules WHERE processed = 0 ORDER BY swdate, swtime";
 $statement = $connect->prepare($query);
 $statement->execute();
 $result = $statement->fetchAll();
@@ -34,8 +34,8 @@ if($total_row > 0)
 			<td width="5%">'.$row["swtime"].'</td>
 			<td width="20%">'.$row["scene"].'</td>
 			<td width="10%">'.$row["transition"].'</td>
-			<td width="20%">'.$row["sourceoff"].'</td>
-			<td width="20%">'.$row["sourceon"].'</td>
+			<td width="20%">'.$row["scenesourceoff"].'|'.$row["sourceoff"].'</td>
+			<td width="20%">'.$row["scenesourceon"].'|'.$row["sourceon"].'</td>
 			<td width="5%">'.$row["duration"].'</td>
 			<td width="5%">'.$row["repeattime"].'</td>
 			<td width="5%">

@@ -1,6 +1,6 @@
 <html>  
     <head>  
-        <title>OBS sceduler</title>  
+        <title>OBS scheduler</title>  
 		<link rel="stylesheet" href="jquery-ui.css">
         <link rel="stylesheet" href="bootstrap.min.css" />
 		<script src="jquery.min.js"></script>  
@@ -10,7 +10,7 @@
         <div class="container">
 			<br />
 			
-			<h3 align="center">OBS sceduler</a></h3><br />
+			<h3 align="center">OBS scheduler</a></h3><br />
 			<br />
 			<div align="right" style="margin-bottom:5px;">
 			<button type="button" name="add" id="add" class="btn btn-success btn-xs">Add</button>
@@ -25,7 +25,7 @@
 			<form method="post" id="user_form">
 				<?php
 					include("database_connection.php");
-					$query = "SELECT * FROM scedules WHERE processed = 0 order by id desc limit 1";
+					$query = "SELECT * FROM schedules WHERE processed = 0 order by id desc limit 1";
 					$statement = $connect->prepare($query);
 					$statement->execute();
 					$result = $statement->fetchAll();
@@ -106,7 +106,7 @@
 						{
 							foreach($result as $row)
 								{
-								?><option value="<?php echo $row["source"];?>"><?php echo $row["scene"] . " &nbsp;|" . $row["source"];?></option><?php
+								?><option value="<?php echo $row["scene"] . "|" . $row["source"];?>"><?php echo $row["scene"] . "|" . $row["source"];?></option><?php
 								}
 						}
 						?>
@@ -122,7 +122,7 @@
 						{
 							foreach($result as $row)
 								{
-								?><option value="<?php echo $row["source"];?>"><?php echo $row["scene"] . " |" . $row["source"];?></option><?php
+								?><option value="<?php echo $row["scene"] . "|" . $row["source"];?>"><?php echo $row["scene"] . "|" . $row["source"];?></option><?php
 								}
 						}
 						?>
@@ -152,7 +152,7 @@
 		</div>
 		
 		<div id="delete_confirmation" title="Confirmation">
-		<p>Are you sure you want to Delete this data?</p>
+		<p>Wilt u deze gegevens echt wissen?</p>
 		</div>
 		
     </body>  

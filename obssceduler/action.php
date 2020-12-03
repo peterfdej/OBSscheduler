@@ -8,8 +8,41 @@ if(isset($_POST["action"]))
 {
 	if($_POST["action"] == "insert")
 	{
+		$sourceoff = explode("|", $_POST["sourceoff"]);
+		$sourceon = explode("|", $_POST["sourceon"]);
+		if(count($sourceoff) == 1)
+		{
+			$qsourceoff = "";
+			$qscenesourceoff = "";
+		} else
+		{
+			$qsourceoff = $sourceoff[1];
+			$qscenesourceoff = $sourceoff[0];
+		}
+		if(count($sourceon) == 1)
+		{
+			$qsourceon = "";
+			$qscenesourceon = "";
+		} else
+		{
+			$qsourceon = $sourceon[1];
+			$qscenesourceon = $sourceon[0];
+		}
 		$query = "
-	INSERT INTO scedules (swdate, swtime, scene, transition, sourceoff, sourceon, duration, repeattime, processed) VALUES ('".$_POST["swdate"]."','".$_POST["swtime"]."','".$_POST["scene"]."','".$_POST["transition"]."','".$_POST["sourceoff"]."','".$_POST["sourceon"]."','".$_POST["duration"]."','".$_POST["repeattime"]."','0')
+		INSERT INTO schedules 
+		(swdate, swtime, scene, transition, sourceoff, sourceon, duration, repeattime, processed, scenesourceoff, scenesourceon) 
+		VALUES (
+		'".$_POST["swdate"]."',
+		'".$_POST["swtime"]."',
+		'".$_POST["scene"]."',
+		'".$_POST["transition"]."',
+		'".$qsourceoff."',
+		'".$qsourceon."',
+		'".$_POST["duration"]."',
+		'".$_POST["repeattime"]."',
+		'0',
+		'".$qscenesourceoff."',
+		'".$qscenesourceon."')
 		";
 		$statement = $connect->prepare($query);
 		$statement->execute();
@@ -18,7 +51,7 @@ if(isset($_POST["action"]))
 	if($_POST["action"] == "fetch_single")
 	{
 		$query = "
-		SELECT * FROM scedules WHERE id = '".$_POST["id"]."'
+		SELECT * FROM schedules WHERE id = '".$_POST["id"]."'
 		";
 		$statement = $connect->prepare($query);
 		$statement->execute();
@@ -29,8 +62,20 @@ if(isset($_POST["action"]))
 			$output['swtime'] = $row['swtime'];
 			$output['scene'] = $row['scene'];
 			$output['transition'] = $row['transition'];
-			$output['sourceoff'] = $row['sourceoff'];
-			$output['sourceon'] = $row['sourceon'];
+			if($row['sourceoff'] == "")
+			{
+				$output['sourceoff'] = $row['sourceoff'];
+			}else
+			{
+				$output['sourceoff'] = $row["scenesourceoff"] . "|" . $row['sourceoff'];
+			}
+			if($row['sourceon'] == "")
+			{
+				$output['sourceon'] = $row['sourceon'];
+			}else
+			{
+				$output['sourceon'] = $row["scenesourceon"] . "|" . $row['sourceon'];
+			}
 			$output['duration'] = $row['duration'];
 			$output['repeattime'] = $row['repeattime'];
 		}
@@ -38,16 +83,38 @@ if(isset($_POST["action"]))
 	}
 	if($_POST["action"] == "update")
 	{
+		$sourceoff = explode("|", $_POST["sourceoff"]);
+		$sourceon = explode("|", $_POST["sourceon"]);
+		if(count($sourceoff) == 1)
+		{
+			$qsourceoff = "";
+			$qscenesourceoff = "";
+		} else
+		{
+			$qsourceoff = $sourceoff[1];
+			$qscenesourceoff = $sourceoff[0];
+		}
+		if(count($sourceon) == 1)
+		{
+			$qsourceon = "";
+			$qscenesourceon = "";
+		} else
+		{
+			$qsourceon = $sourceon[1];
+			$qscenesourceon = $sourceon[0];
+		}
 		$query = "
-		UPDATE scedules 
+		UPDATE schedules 
 		SET swdate = '".$_POST["swdate"]."',
 		swtime = '".$_POST["swtime"]."',
 		scene = '".$_POST["scene"]."',
 		transition = '".$_POST["transition"]."',
-		sourceoff = '".$_POST["sourceoff"]."',
-		sourceon = '".$_POST["sourceon"]."',
+		sourceoff = '".$qsourceoff."',
+		sourceon = '".$qsourceon."',
 		duration = '".$_POST["duration"]."',
-		repeattime = '".$_POST["repeattime"]."'
+		repeattime = '".$_POST["repeattime"]."',
+		scenesourceoff = '".$qscenesourceoff."',
+		scenesourceon = '".$qscenesourceon."'
 		WHERE id = '".$_POST["hidden_id"]."'
 		";
 		$statement = $connect->prepare($query);
@@ -56,7 +123,7 @@ if(isset($_POST["action"]))
 	}
 	if($_POST["action"] == "delete")
 	{
-		$query = "DELETE FROM scedules WHERE id = '".$_POST["id"]."'";
+		$query = "DELETE FROM schedules WHERE id = '".$_POST["id"]."'";
 		$statement = $connect->prepare($query);
 		$statement->execute();
 		echo '<p>Data Deleted</p>';
