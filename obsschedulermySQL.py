@@ -20,8 +20,8 @@ except ImportError:
 
 #MariaDB settings. Port = 3306 or 3307
 mysqlconfig = {
-  'user': 'skv',
-  'password': 'Kabelkrant2020',
+  'user': 'user',
+  'password': 'pass',
   'host': 'localhost',
   'port': '3306',
   'database': 'OBSdb',
